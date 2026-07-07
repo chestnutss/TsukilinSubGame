@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Twitch 小羊打王設定</title>
+<style>
+:root{--bg:#071018;--panel:#101a25;--line:#28405a;--ink:#eef7ff;--muted:#9db4ca;--green:#36d6a9;--gold:#ffd36a;--red:#ff5570}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 16% 10%,rgba(54,214,169,.18),transparent 30%),radial-gradient(circle at 86% 78%,rgba(255,211,106,.14),transparent 28%),linear-gradient(180deg,#071018,#050810);color:var(--ink);font-family:"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif}.wrap{width:min(760px,calc(100vw - 28px));margin:28px auto}.panel{border:1px solid var(--line);background:rgba(16,26,37,.9);border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.34);overflow:hidden}.head{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line)}h1{font-size:22px;margin:0}.form{display:grid;gap:13px;padding:18px}label{display:grid;gap:7px;color:var(--muted);font-size:13px;font-weight:850}input{width:100%;border:1px solid #33465c;background:#08121e;color:var(--ink);border-radius:6px;padding:11px 12px;outline:none;font:inherit;font-weight:850}input:focus{border-color:#61c9ff;box-shadow:0 0 0 3px rgba(97,201,255,.12)}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:6px;padding:12px;cursor:pointer;font-weight:950;color:#04120f;background:linear-gradient(90deg,var(--green),var(--gold));font:inherit}.btn.secondary{background:#172434;color:var(--ink);border:1px solid #33465c}.notice{display:none;border-radius:6px;padding:10px 12px;font-size:13px;font-weight:850;background:#10251f;border:1px solid #315f55;color:#bfffe8}.notice.show{display:block}.hint{color:var(--muted);font-size:13px;line-height:1.6}.pill{font-size:12px;color:#10251f;background:linear-gradient(90deg,var(--green),var(--gold));font-weight:950;padding:5px 9px;border-radius:999px;white-space:nowrap}@media(max-width:620px){.row,.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="panel">
+    <div class="head"><h1>Twitch 小羊打王設定</h1><span class="pill">GitHub Pages</span></div>
+    <form class="form" id="form">
+      <label>活動標題<input id="title" name="title"></label>
+      <div class="row">
+        <label>ROUND<input id="round" name="round" type="number" min="1" step="1"></label>
+        <label>王死亡掉寶<input id="bossDrop" name="bossDrop"></label>
+      </div>
+      <div class="row">
+        <label>BOSS 自動扣血間隔（秒）<input id="autoDrainSeconds" name="autoDrainSeconds" type="number" min="0" step="0.1"></label>
+        <label>每次自動扣 HP<input id="autoDrainHp" name="autoDrainHp" type="number" min="0" step="1"></label>
+      </div>
+      <label>WebSocket URL<input id="external_websocket_url" name="external_websocket_url"></label>
+      <div class="row">
+        <label>測試勇者 ID<input id="testUser" name="testUser"></label>
+        <label>測試訂閱數<input id="testAmount" name="testAmount" type="number" min="1" step="1"></label>
+      </div>
+      <div class="notice" id="notice"></div>
+      <div class="hint">這個版本會把設定存在同一個瀏覽器中。演出頁和設定頁開在同一個瀏覽器時，演出頁重新整理後會吃到最新設定。</div>
+      <div class="actions">
+        <button class="btn" type="submit">儲存設定</button>
+        <button class="btn secondary" type="button" id="openBattle">開啟演出頁</button>
+      </div>
+    </form>
+  </section>
+</main>
+<script>
+const CONFIG_KEY="twitchSheepBossSettings";
+const defaults={title:"月希下班台",round:6,bossDrop:"4%",autoDrainSeconds:60,autoDrainHp:1,external_websocket_url:"wss://tsukilin.greentool.cc/ws/off",testUser:"栗子羊8",testAmount:1};
+const fields=["title","round","bossDrop","autoDrainSeconds","autoDrainHp","external_websocket_url","testUser","testAmount"];
+function readSaved(){try{return JSON.parse(localStorage.getItem(CONFIG_KEY)||"{}")}catch(e){return{}}}
+async function loadDefaults(){let file={};try{const r=await fetch("config.json",{cache:"no-store"});if(r.ok)file=await r.json()}catch(e){}const data={...defaults,...file,...readSaved()};fields.forEach(k=>document.getElementById(k).value=data[k]??"")}
+function readForm(){const data={};fields.forEach(k=>{const el=document.getElementById(k),numeric=["round","autoDrainSeconds","autoDrainHp","testAmount"].includes(k);data[k]=numeric?Number(el.value)||0:el.value.trim()});data.round=Math.max(1,Math.floor(data.round||1));data.testAmount=Math.max(1,Math.floor(data.testAmount||1));return data}
+function showNotice(text){const n=document.getElementById("notice");n.textContent=text;n.classList.add("show")}
+document.getElementById("form").addEventListener("submit",e=>{e.preventDefault();localStorage.setItem(CONFIG_KEY,JSON.stringify(readForm()));showNotice("設定已儲存。演出頁重新整理後會套用。")});
+document.getElementById("openBattle").addEventListener("click",()=>window.open("battle.html","_blank"));
+loadDefaults();
+</script>
+</body>
+</html>
