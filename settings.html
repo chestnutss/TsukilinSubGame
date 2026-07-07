@@ -41,6 +41,9 @@
 <script>
 const CONFIG_KEY="twitchSheepBossSettings";
 const TEST_KEY="twitchSheepBossTestAttack";
+const CHANNEL_KEY="twitchSheepBossControl";
+let battleWindow=null;
+const controlChannel="BroadcastChannel" in window?new BroadcastChannel(CHANNEL_KEY):null;
 const defaults={title:"月希下班台",round:6,bossDrop:"4%",autoDrainSeconds:60,autoDrainHp:1,external_websocket_url:"wss://tsukilin.greentool.cc/ws/off",testUser:"栗子羊8",testAmount:1};
 const fields=["title","round","bossDrop","autoDrainSeconds","autoDrainHp","external_websocket_url","testUser","testAmount"];
 function readSaved(){try{return JSON.parse(localStorage.getItem(CONFIG_KEY)||"{}")}catch(e){return{}}}
@@ -49,8 +52,10 @@ function readForm(){const data={};fields.forEach(k=>{const el=document.getElemen
 function saveSettings(){const data=readForm();localStorage.setItem(CONFIG_KEY,JSON.stringify(data));return data}
 function showNotice(text){const n=document.getElementById("notice");n.textContent=text;n.classList.add("show")}
 document.getElementById("form").addEventListener("submit",e=>{e.preventDefault();saveSettings();showNotice("設定已儲存。演出頁重新整理後會套用。")});
-document.getElementById("openBattle").addEventListener("click",()=>window.open("battle.html","_blank"));
-document.getElementById("testAttack").addEventListener("click",()=>{const data=saveSettings();localStorage.setItem(TEST_KEY,JSON.stringify({id:Date.now(),user:data.testUser||"test_sheep",amount:Math.max(1,Math.floor(Number(data.testAmount)||1))}));showNotice("已送出測試訂閱攻擊。請確認演出頁是否已開啟。")});
+function testPayload(data){return{type:"test_attack",id:Date.now(),user:data.testUser||"test_sheep",amount:Math.max(1,Math.floor(Number(data.testAmount)||1))}}
+function battleUrl(payload){return`battle.html?testId=${encodeURIComponent(payload.id)}&testUser=${encodeURIComponent(payload.user)}&testAmount=${encodeURIComponent(payload.amount)}`}
+document.getElementById("openBattle").addEventListener("click",()=>{saveSettings();battleWindow=window.open("battle.html","sheepBossBattle")});
+document.getElementById("testAttack").addEventListener("click",()=>{const payload=testPayload(saveSettings());localStorage.setItem(TEST_KEY,JSON.stringify(payload));if(controlChannel)controlChannel.postMessage(payload);if(battleWindow&&!battleWindow.closed)battleWindow.postMessage(payload,"*");else battleWindow=window.open(battleUrl(payload),"sheepBossBattle");showNotice("已送出測試訂閱攻擊。若剛開啟演出頁，請等畫面載入後再按一次。")});
 loadDefaults();
 </script>
 </body>
