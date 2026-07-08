@@ -44,7 +44,7 @@ const TEST_KEY="twitchSheepBossTestAttack";
 const CHANNEL_KEY="twitchSheepBossControl";
 let battleWindow=null;
 const controlChannel="BroadcastChannel" in window?new BroadcastChannel(CHANNEL_KEY):null;
-const defaults={title:"月希下班台",round:6,bossDrop:"4%",autoDrainSeconds:60,autoDrainHp:1,external_websocket_url:"wss://tsukilin.greentool.cc/ws/off",testUser:"栗子羊8",testAmount:1};
+const defaults={title:"月希下班台",round:6,bossDrop:"4%",autoDrainSeconds:30,autoDrainHp:1,external_websocket_url:"wss://tsukilin.greentool.cc/ws/off",testUser:"栗子羊8",testAmount:1};
 const fields=["title","round","bossDrop","autoDrainSeconds","autoDrainHp","external_websocket_url","testUser","testAmount"];
 function readSaved(){try{return JSON.parse(localStorage.getItem(CONFIG_KEY)||"{}")}catch(e){return{}}}
 async function loadDefaults(){let file={};try{const r=await fetch("config.json",{cache:"no-store"});if(r.ok)file=await r.json()}catch(e){}const data={...defaults,...file,...readSaved()};fields.forEach(k=>document.getElementById(k).value=data[k]??"")}
