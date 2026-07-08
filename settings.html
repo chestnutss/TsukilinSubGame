@@ -14,22 +14,13 @@
   <section class="panel">
     <div class="head"><h1>Twitch 即時訂閱打王設定</h1><span class="pill">GitHub Pages</span></div>
     <form class="form" id="form">
-      <label>活動標題<input id="title" name="title"></label>
-      <div class="row">
-        <label>ROUND<input id="round" name="round" type="number" min="1" step="1"></label>
-        <label>王死亡掉寶<input id="bossDrop" name="bossDrop"></label>
-      </div>
-      <div class="row">
-        <label>BOSS 自動扣血間隔（秒）<input id="autoDrainSeconds" name="autoDrainSeconds" type="number" min="0" step="0.1"></label>
-        <label>每次自動扣 HP<input id="autoDrainHp" name="autoDrainHp" type="number" min="0" step="1"></label>
-      </div>
       <label>WebSocket URL<input id="external_websocket_url" name="external_websocket_url"></label>
       <div class="row">
         <label>測試勇者 ID<input id="testUser" name="testUser"></label>
         <label>測試訂閱數<input id="testAmount" name="testAmount" type="number" min="1" step="1"></label>
       </div>
       <div class="notice" id="notice"></div>
-      <div class="hint">設定會保存在目前瀏覽器。測試訂閱攻擊只會播放演出，不會影響總訂閱數、HP 或排行榜。</div>
+      <div class="hint">活動標題、掉寶名稱、副標題會由 WebSocket 資料更新。BOSS 會固定每 30 秒扣 1 HP。</div>
       <div class="actions">
         <button class="btn" type="submit">儲存設定</button>
         <button class="btn secondary" type="button" id="openBattle">開啟演出頁</button>
@@ -42,11 +33,11 @@
 const CONFIG_KEY="twitchSheepBossSettings",TEST_KEY="twitchSheepBossTestAttack",CHANNEL_KEY="twitchSheepBossControl";
 let battleWindow=null;
 const controlChannel=("BroadcastChannel" in window)?new BroadcastChannel(CHANNEL_KEY):null;
-const defaults={title:"月希下班台",round:6,bossDrop:"4%",autoDrainSeconds:60,autoDrainHp:1,external_websocket_url:"wss://tsukilin.greentool.cc/ws/off",testUser:"test_sheep",testAmount:1};
-const fields=["title","round","bossDrop","autoDrainSeconds","autoDrainHp","external_websocket_url","testUser","testAmount"];
+const defaults={external_websocket_url:"wss://tsukilin.greentool.cc/ws/off",testUser:"test_sheep",testAmount:1};
+const fields=["external_websocket_url","testUser","testAmount"];
 function readSaved(){try{return JSON.parse(localStorage.getItem(CONFIG_KEY)||"{}")}catch(e){return{}}}
 async function loadDefaults(){let file={};try{const r=await fetch("config.json",{cache:"no-store"});if(r.ok)file=await r.json()}catch(e){}const data={...defaults,...file,...readSaved()};fields.forEach(k=>document.getElementById(k).value=data[k]??"")}
-function readForm(){const data={};fields.forEach(k=>{const el=document.getElementById(k),numeric=["round","autoDrainSeconds","autoDrainHp","testAmount"].includes(k);data[k]=numeric?Number(el.value)||0:el.value.trim()});data.round=Math.max(1,Math.floor(data.round||1));data.testAmount=Math.max(1,Math.floor(data.testAmount||1));return data}
+function readForm(){const data={};fields.forEach(k=>{const el=document.getElementById(k),numeric=k==="testAmount";data[k]=numeric?Number(el.value)||0:el.value.trim()});data.testAmount=Math.max(1,Math.floor(data.testAmount||1));return data}
 function saveSettings(){const data=readForm();localStorage.setItem(CONFIG_KEY,JSON.stringify(data));return data}
 function showNotice(text){const n=document.getElementById("notice");n.textContent=text;n.classList.add("show")}
 function sendTestAttack(){const data=saveSettings(),payload={type:"test_attack",id:Date.now(),user:data.testUser||"test_sheep",amount:data.testAmount||1};localStorage.setItem(TEST_KEY,JSON.stringify(payload));if(controlChannel)controlChannel.postMessage(payload);if(battleWindow&&!battleWindow.closed)battleWindow.postMessage(payload,"*");else battleWindow=window.open(`battle.html?testId=${payload.id}&testUser=${encodeURIComponent(payload.user)}&testAmount=${payload.amount}`,"sheepBossBattle");showNotice("已送出測試攻擊，只會播放演出，不會改總訂閱數、HP 或排行榜。")}

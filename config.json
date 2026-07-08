@@ -1,10 +1,5 @@
 {
-  "title": "月希下班台",
-  "round": 6,
-  "bossDrop": "4%",
-  "autoDrainSeconds": 60,
-  "autoDrainHp": 1,
   "external_websocket_url": "wss://tsukilin.greentool.cc/ws/off",
-  "testUser": "栗子羊8",
+  "testUser": "test_sheep",
   "testAmount": 1
 }
